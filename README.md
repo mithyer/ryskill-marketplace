@@ -1,6 +1,6 @@
 # ryskill Marketplace
 
-Marketplace index repository for discovering and installing `ryskill` in Claude Code.
+Installable marketplace distribution for the `ryskill` Claude Code plugin.
 
 ## Installation
 
@@ -9,27 +9,22 @@ Marketplace index repository for discovering and installing `ryskill` in Claude 
 Register the marketplace first:
 
 ```bash
-/plugin marketplace add mithyer/ryskill-marketplace
+claude plugins marketplace add mithyer/ryskill-marketplace
 ```
 
 Then install the plugin:
 
 ```bash
-/plugin install ryskill@ryskill-marketplace
+claude plugins install ryskill@ryskill-marketplace
 ```
 
-## What lives here
+## Repo responsibilities
 
-This repository is the marketplace index/listing for `ryskill`.
-It exists to publish marketplace metadata and point Claude Code at the canonical plugin source repository.
+This repository exists to publish the installable marketplace distribution for `ryskill`.
+It contains the plugin manifest, commands, runtime helpers, and marketplace metadata in the layout Claude Code expects for marketplace installation.
 
-## Canonical plugin source
-
-The actual plugin manifest, commands, runtime helpers, and development history live in:
+The canonical development repository and source of truth live in:
 
 - `https://github.com/mithyer/ryskill`
 
-## Status
-
-This repository is intentionally lightweight and does not duplicate the plugin implementation.
-Marketplace behavior for pointer-based plugin sources is being validated experimentally.
+That source repository is where ongoing development, history, and implementation changes should happen first. This marketplace repository is the distribution/publishing mirror used so marketplace installs work reliably.

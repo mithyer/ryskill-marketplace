@@ -1,6 +1,6 @@
 {
   "name": "ryskill-marketplace",
-  "description": "Marketplace index for the ryskill Claude Code plugin",
+  "description": "Marketplace listing and installable distribution for the ryskill Claude Code plugin",
   "owner": {
     "name": "Ray"
   },
@@ -9,7 +9,7 @@
       "name": "ryskill",
       "description": "Modular Claude plugin with git utilities, starting with /ry-git-commit.",
       "version": "0.1.0",
-      "source": "https://github.com/mithyer/ryskill",
+      "source": "./",
       "author": {
         "name": "Ray"
       }
