@@ -2,6 +2,7 @@
 name: ry-git-commit
 description: Split staged and unstaged changes into commit candidates and commit a selected transaction safely.
 ---
+> Experimental notice: this initial marketplace release validates installation packaging. The command implementation still depends on an early local verification flow and may require follow-up changes before it works on every machine.
 
 Current phase-1 local verification contract: when this plugin is loaded via `--plugin-dir` from `/Users/ray/Documents/projects/ryskill/.worktrees/ry-git-commit`, use the fixed local helper root below because the interactive slash-command Bash body does not currently receive `CLAUDE_COMMAND_FILE` or any other reliable plugin-root runtime variable for this flow.
 
