@@ -1,19 +1,26 @@
 ---
-name: ry-git-commit
+name: ry:git-commit
 description: Split staged and unstaged changes into commit candidates and commit a selected transaction safely.
 ---
 
-Current phase-1 local verification contract: when this plugin is loaded via `--plugin-dir` from `/Users/ray/Documents/projects/ryskill/.worktrees/ry-git-commit`, use the fixed local helper root below because the interactive slash-command Bash body does not currently receive `CLAUDE_COMMAND_FILE` or any other reliable plugin-root runtime variable for this flow.
+Resolve the installed plugin root at runtime from the command file location so the command works from source, a worktree, or a marketplace install.
 
 ```bash
-plugin_root="/Users/ray/Documents/projects/ryskill/.worktrees/ry-git-commit"
-if [ ! -d "$plugin_root" ]; then
-  printf 'ry-git-commit: expected local verification plugin root is missing (%s)\n' "$plugin_root" >&2
+if [ -n "${CLAUDE_COMMAND_FILE:-}" ]; then
+  command_dir="$(cd "$(dirname "$CLAUDE_COMMAND_FILE")" && pwd)"
+  plugin_root="$({ bash "$command_dir/../runtime/plugin-root.sh"; } | sed -n 's/^plugin_root=//p')"
+else
+  printf 'ry:git-commit: CLAUDE_COMMAND_FILE is required to resolve the plugin root\n' >&2
+  exit 1
+fi
+
+if [ -z "$plugin_root" ] || [ ! -d "$plugin_root" ]; then
+  printf 'ry:git-commit: failed to resolve plugin root via runtime/plugin-root.sh\n' >&2
   exit 1
 fi
 ```
 
-Use the helpers in this order for the current local verification path:
+Use the helpers in this order after root resolution:
 1. `bash "$plugin_root/runtime/project-context.sh" --cwd "$PWD" [--project <project>] [--branch <branch>]` to resolve `project_path` and `branch`
 2. `bash "$plugin_root/runtime/git-state.sh" "$project_path"`
 3. `bash "$plugin_root/modules/git/ry-git-commit/analyze-staged.sh" "$project_path"`

@@ -1,6 +1,6 @@
 {
   "name": "ryskill",
-  "description": "Modular Claude plugin with git utilities, starting with /ry-git-commit.",
+  "description": "Modular Claude plugin with git utilities, starting with /ry:git-commit.",
   "version": "0.1.0",
   "author": {
     "name": "Ray"

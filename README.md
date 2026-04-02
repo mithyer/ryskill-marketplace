@@ -18,6 +18,12 @@ Then install the plugin:
 claude plugins install ryskill@ryskill-marketplace
 ```
 
+## Command
+
+- `/ry:git-commit`
+
+The distributed command resolves its plugin root from the installed command file via `runtime/plugin-root.sh`, so the same command definition works after marketplace installation without depending on the user's current working directory.
+
 ## Repo responsibilities
 
 This repository exists to publish the installable marketplace distribution for `ryskill`.
