@@ -15,19 +15,23 @@ while IFS='|' read -r bucket index message files; do
 done
 
 if [[ ${#staged[@]} -gt 0 ]]; then
-  echo "Staged candidates"
+  echo "Staged changes:"
   for item in "${staged[@]}"; do
     IFS='|' read -r bucket index message files <<<"$item"
-    echo "$bucket $index. $message"
+    echo "$index. $message"
     echo "Files: $files"
   done
+else
+  echo "Staged changes: none"
 fi
 
 if [[ ${#unstaged[@]} -gt 0 ]]; then
-  echo "Unstaged candidates"
+  echo "Unstaged changes:"
   for item in "${unstaged[@]}"; do
     IFS='|' read -r bucket index message files <<<"$item"
-    echo "$bucket $index. $message"
+    echo "$index. $message"
     echo "Files: $files"
   done
+else
+  echo "Unstaged changes: none"
 fi

@@ -3,19 +3,45 @@ name: ry:git-commit
 description: Split staged and unstaged changes into commit candidates and commit a selected transaction safely.
 ---
 
-Resolve the installed plugin root at runtime from the command file location so the command works from source, a worktree, or a marketplace install.
+Resolve the installed plugin root at runtime from the command file location so the command works from source, a worktree, or a marketplace install. The command remains explicit slash invocation via `/ry:git-commit`.
+
+First, directly tell the user which changes are currently staged and which are currently unstaged. Then continue into the existing commit flow.
 
 ```bash
+plugin_root_line=""
+plugin_root_helper=""
+
 if [ -n "${CLAUDE_COMMAND_FILE:-}" ]; then
   command_dir="$(cd "$(dirname "$CLAUDE_COMMAND_FILE")" && pwd)"
-  plugin_root="$({ bash "$command_dir/../runtime/plugin-root.sh"; } | sed -n 's/^plugin_root=//p')"
-else
-  printf 'ry:git-commit: CLAUDE_COMMAND_FILE is required to resolve the plugin root\n' >&2
+  candidate_helper="$command_dir/../runtime/plugin-root.sh"
+  if [ -f "$candidate_helper" ]; then
+    plugin_root_helper="$candidate_helper"
+  fi
+elif [ -f "$PWD/plugin.json" ]; then
+  for candidate_helper in "$PWD/runtime/plugin-root.sh" "$PWD/../runtime/plugin-root.sh"; do
+    if [ -f "$candidate_helper" ]; then
+      plugin_root_helper="$candidate_helper"
+      break
+    fi
+  done
+fi
+
+if [ -z "$plugin_root_helper" ]; then
+  printf 'ry:git-commit: unable to resolve plugin root; CLAUDE_COMMAND_FILE is unset and no local plugin checkout was detected from PWD=%s\n' "$PWD" >&2
   exit 1
 fi
 
-if [ -z "$plugin_root" ] || [ ! -d "$plugin_root" ]; then
-  printf 'ry:git-commit: failed to resolve plugin root via runtime/plugin-root.sh\n' >&2
+plugin_root_line="$(bash "$plugin_root_helper")"
+case "$plugin_root_line" in
+  plugin_root=*) plugin_root="${plugin_root_line#plugin_root=}" ;;
+  *)
+    printf 'ry:git-commit: failed to parse plugin root from %s\n' "$plugin_root_helper" >&2
+    exit 1
+    ;;
+esac
+
+if [ ! -d "$plugin_root" ]; then
+  printf 'ry:git-commit: resolved plugin root is not a directory: %s\n' "$plugin_root" >&2
   exit 1
 fi
 ```
@@ -32,10 +58,13 @@ Use the helpers in this order after root resolution:
 
 Behavior requirements:
 - Analyze staged and unstaged changes separately after resolving `project_path` and validating repository safety.
+- First, directly report staged changes and unstaged changes to the user before asking them to choose anything.
+- Format that summary as `Staged changes: ...` and `Unstaged changes: ...`.
+- When changes exist in a bucket, show numbered candidate lines using the candidate message, then show `Files: ...` on its own line without a leading bullet.
 - Invoke runtime and module helpers through `bash` rather than relying on helper execute bits.
 - If only one candidate exists, skip selection and commit that candidate directly.
-- If multiple candidates exist, present them first, parse the user's selection, and build a plan from that selection.
-- Current limitation: execution commits only the first non-empty plan row from the resulting plan.
+- If multiple candidates exist, present them after the staged/unstaged summary, parse the user's selection, and build a plan from that selection.
+- Execute the resulting non-empty plan rows in order.
 - Preserve any unselected changes.
 
 Supported arguments:
