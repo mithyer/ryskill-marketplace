@@ -8,7 +8,7 @@
     {
       "name": "ryskill",
       "description": "Modular Claude plugin with git utilities, starting with /ry:git-commit.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "source": "./",
       "author": {
         "name": "Ray"
