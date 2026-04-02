@@ -32,19 +32,17 @@ if [ -z "$plugin_root_helper" ] && [ -d "$plugin_cache_root" ]; then
   installed_plugin_root="$(python3 - "$plugin_cache_root" <<'PY'
 import sys
 from pathlib import Path
-from packaging.version import Version
 
 root = Path(sys.argv[1])
 versions = []
 for path in root.iterdir():
     if not path.is_dir():
         continue
-    try:
-        version = Version(path.name)
-    except Exception:
+    parts = path.name.split('.')
+    if not parts or any(not part.isdigit() for part in parts):
         continue
     if (path / 'plugin.json').is_file() and (path / 'runtime' / 'plugin-root.sh').is_file():
-        versions.append((version, path))
+        versions.append((tuple(int(part) for part in parts), path))
 
 if versions:
     versions.sort()
@@ -93,7 +91,7 @@ Behavior requirements:
 - Analyze staged and unstaged changes separately after resolving `project_path` and validating repository safety.
 - First, directly report staged changes and unstaged changes to the user before asking them to choose anything.
 - Format that summary as `Staged changes: ...` and `Unstaged changes: ...`.
-- When changes exist in a bucket, show numbered candidate lines using the candidate message, then show `Files: ...` on its own line without a leading bullet.
+- When changes exist in a bucket, show numbered candidate lines using the analyzer-generated candidate message exactly as produced, then show `Files: ...` on its own line without a leading bullet.
 - After presenting the summaries and candidate lines, prompt with exactly: `Select commit numbers, or 0 to over`.
 - Invoke runtime and module helpers through `bash` rather than relying on helper execute bits.
 - Use the selected candidate message verbatim as the final git commit message.
