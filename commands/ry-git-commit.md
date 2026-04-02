@@ -10,6 +10,8 @@ First, directly tell the user which changes are currently staged and which are c
 ```bash
 plugin_root_line=""
 plugin_root_helper=""
+plugin_cache_root="$HOME/.claude/plugins/cache/ryskill-marketplace/ryskill"
+installed_plugin_root=""
 
 if [ -n "${CLAUDE_COMMAND_FILE:-}" ]; then
   command_dir="$(cd "$(dirname "$CLAUDE_COMMAND_FILE")" && pwd)"
@@ -26,8 +28,39 @@ elif [ -f "$PWD/plugin.json" ]; then
   done
 fi
 
+if [ -z "$plugin_root_helper" ] && [ -d "$plugin_cache_root" ]; then
+  installed_plugin_root="$(python3 - "$plugin_cache_root" <<'PY'
+import sys
+from pathlib import Path
+from packaging.version import Version
+
+root = Path(sys.argv[1])
+versions = []
+for path in root.iterdir():
+    if not path.is_dir():
+        continue
+    try:
+        version = Version(path.name)
+    except Exception:
+        continue
+    if (path / 'plugin.json').is_file() and (path / 'runtime' / 'plugin-root.sh').is_file():
+        versions.append((version, path))
+
+if versions:
+    versions.sort()
+    print(versions[-1][1])
+PY
+)"
+  if [ -n "$installed_plugin_root" ]; then
+    candidate_helper="$installed_plugin_root/runtime/plugin-root.sh"
+    if [ -f "$candidate_helper" ]; then
+      plugin_root_helper="$candidate_helper"
+    fi
+  fi
+fi
+
 if [ -z "$plugin_root_helper" ]; then
-  printf 'ry:git-commit: unable to resolve plugin root; CLAUDE_COMMAND_FILE is unset and no local plugin checkout was detected from PWD=%s\n' "$PWD" >&2
+  printf 'ry:git-commit: unable to resolve plugin root; CLAUDE_COMMAND_FILE is unset, PWD=%s is not a local plugin checkout, and no installed ryskill plugin was found under $HOME/.claude/plugins/cache/ryskill-marketplace/ryskill\n' "$PWD" >&2
   exit 1
 fi
 
@@ -61,9 +94,10 @@ Behavior requirements:
 - First, directly report staged changes and unstaged changes to the user before asking them to choose anything.
 - Format that summary as `Staged changes: ...` and `Unstaged changes: ...`.
 - When changes exist in a bucket, show numbered candidate lines using the candidate message, then show `Files: ...` on its own line without a leading bullet.
+- After presenting the summaries and candidate lines, prompt with exactly: `Select commit numbers, or 0 to over`.
 - Invoke runtime and module helpers through `bash` rather than relying on helper execute bits.
-- If only one candidate exists, skip selection and commit that candidate directly.
-- If multiple candidates exist, present them after the staged/unstaged summary, parse the user's selection, and build a plan from that selection.
+- Use the selected candidate message verbatim as the final git commit message.
+- If multiple candidates exist, parse the user's selection, and build a plan from that selection.
 - Execute the resulting non-empty plan rows in order.
 - Preserve any unselected changes.
 
